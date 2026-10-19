@@ -1,12 +1,12 @@
-# Rampart Run: design notes (v0.3, plan only)
+# Rampart Run: design notes (v0.4, plan only)
 
-Our own take on the crowd-shooter / gate-runner mini-game that Total Battle: Strategy Games shows in its App Store screenshots. Working title: **Rampart Run**. Nothing is built yet. This is the plan to agree on first. v0.3 folds in Ken's answers: enemy swarms, boss strikes, random perk barrels, big deployables, merged recruit cards, and two themes.
+Our own take on the crowd-shooter / gate-runner mini-game that Total Battle: Strategy Games shows in its App Store screenshots. Working title: **Rampart Run**. Nothing is built yet. This is the plan to agree on first. v0.4 folds in Ken's answers: zombie swarms, melee boss, acid spitters, random perk barrels, big deployables, separate recruit and multiplier cards, and two themes.
 
 ## What the reference shows
 
 - A crowd of soldiers runs up a lane seen from behind and above. A number floats over the crowd: your army size.
 - **Cards** span part of the lane as banners (x2, x4, +10, +100, and red ones like a divide by 7). They come in side-by-side pairs, so the choice is the game. A multiplier card multiplies the soldiers you already have (x4 turns 10 into 40), applied once when your crowd runs through it.
-- **Enemy crowds** are red with a number. They swarm toward you in waves of random size. Your bullets whittle them down. Survivors that reach you kill soldiers.
+- **Enemy crowds** are red zombies with a number. They swarm toward you in waves of random size. Your bullets whittle them down. Survivors that reach you kill soldiers.
 - **Barrels** hide a perk. The number on the barrel is the bullets it takes to break, and it counts down as you shoot.
 - **Spike rows**, then a **finale** with a big number to beat.
 
@@ -21,11 +21,13 @@ You are a Warden of Ironveld leading a warband. Iron banners, ember-lit stone, b
 | Crowd | Number of soldiers. Reaches 0 and the run is over. |
 | Shooting | Automatic, forward from the crowd's lane. Fire rate grows with soldier count. |
 | Bullets | Hurt barrels, enemies, the boss and big deployables' targets alike. One bullet is 1 damage at base. |
-| Recruit card | One merged card type. Grey **+N** adds N soldiers. **xN** multiplies the soldiers you have. Applied once on pass-through, showing the result. Red cards subtract or divide. |
+| Recruit | Grey crowd with **+N**. Run into it to add N soldiers. |
+| Multiplier card | Banner with **xN** (or minus/divide in red). Changes the soldiers you already have. Applied once on pass-through, showing the result. Kept separate from recruits. |
 | Barrel | Counts down as bullets hit it. At 0 it breaks and reveals a perk. Ignore it and it rolls past. |
-| Enemy wave | A red crowd with a number, moving toward you. Bullets reduce it. Any that reach you kill that many soldiers (and die). Waves arrive in random sizes, scaled by level. |
+| Zombie wave | A red zombie crowd with a number, moving toward you. Bullets reduce it. Any that reach you kill that many soldiers (and die). Random sizes, scaled by level. |
+| Acid spitters | From harder levels, some zombies spit acid globs at your squad. Each glob has its own small health: shoot it down to neutralise it, or take the hit (it kills soldiers where it lands). |
 | Stream | Variant level: a continuous stream of enemies with the boss in the middle. You must shoot through the stream and boss before it reaches you. |
-| Boss | Big, slow, huge health. Swings with critical hits: each strike kills a large share of your crowd (a 150 squad is gone in 2-3 strikes). Strikes are telegraphed so you can see them coming. Also throws themed items (below). |
+| Boss | Big, slow, huge health, walks toward you. It can only hurt you by reaching you: a melee strike with a critical hit kills a large share of the crowd (a 150 squad is gone in 2-3 strikes). Keep it from arriving by killing it first. It also throws themed items (below). |
 | Spikes | Lose 25% of the crowd per row, unless you pass through the gap. |
 | Finish | Boss dead (or gate reached) clears the level. |
 | Rank | Every 25 soldiers upgrades the troops' look (cosmetic). |
@@ -64,11 +66,11 @@ Two to start, same rules, different look and different boss throws.
 | **Bridge** | Stone bridge over a gorge at dusk, railings, hanging lamps | Cars and wreckage that crush a lane; falling pieces of the railing |
 | **Port** | Harbour dock at night, cranes, containers, water either side | Shipping containers and swung crane loads that block a lane; barrels of oil |
 
-A throw is telegraphed with a shadow on the lane. Dodge by steering to a clear lane, or take the hit. Level N picks a theme from the seed, so a run alternates.
+A thrown item is a projectile with a landing shadow on the lane. Steer to a clear lane to dodge it, or take the hit. Level N picks a theme from the seed, so a run alternates.
 
 ## The core decision
 
-Every few seconds you choose between: a big multiplier card, a barrel worth breaking (holding your lane while the clock and the swarm keep coming), a trap, or dodging a throw. In boss fights you balance firepower against staying out of the strike zone.
+Every few seconds you choose between: a big multiplier card, a barrel worth breaking (holding your lane while the clock and the swarm keep coming), a trap, or dodging a throw. In boss fights you balance firepower against dodging throws while the boss closes in.
 
 ## Controls
 
