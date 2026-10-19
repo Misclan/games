@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ironveld</title>
+<meta name="description" content="Ironveld is a single-player war strategy game. Build a stronghold, train troops, command heroes and take the Ironlord Citadel.">
+<meta name="theme-color" content="#141d27">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-food" viewBox="0 0 24 24"><path d="M12 21V8M12 8c-2.5-.5-3.5-2.5-3.5-4.5 2.5.3 3.5 2 3.5 4.5zM12 8c2.5-.5 3.5-2.5 3.5-4.5-2.5.3-3.5 2-3.5 4.5zM12 14c-2.5-.5-3.5-2.5-3.5-4.5 2.5.3 3.5 2 3.5 4.5zM12 14c2.5-.5 3.5-2.5 3.5-4.5-2.5.3-3.5 2-3.5 4.5z"/></symbol>
+    <symbol id="i-stone" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></symbol>
+    <symbol id="i-iron" viewBox="0 0 24 24"><path d="M3 17l3-8h12l3 8zM8 12h8"/></symbol>
+    <symbol id="i-farm" viewBox="0 0 24 24"><path d="M3 20h18M5 20V10l7-5 7 5v10M10 20v-5h4v5"/></symbol>
+    <symbol id="i-quarry" viewBox="0 0 24 24"><path d="M3 20l5-9 3 4 3-7 7 12zM3 20h18"/></symbol>
+    <symbol id="i-forge" viewBox="0 0 24 24"><path d="M3 8h13c0 3-2 5-6 5v3h4v3H7v-3h3v-3C6 13 4 11 3 8zM16 8h5"/></symbol>
+    <symbol id="i-barracks" viewBox="0 0 24 24"><path d="M3 20L12 4l9 16zM12 11v9M8 20h8"/></symbol>
+    <symbol id="i-hall" viewBox="0 0 24 24"><path d="M3 18h18M4 18L3 8l5 4 4-7 4 7 5-4-1 10"/></symbol>
+    <symbol id="i-wall" viewBox="0 0 24 24"><path d="M3 20V8h3V5h3v3h2V5h3v3h3V5h3v15zM10 20v-5h4v5"/></symbol>
+    <symbol id="i-pike" viewBox="0 0 24 24"><path d="M4 20L16 8M13 6.5l5-2.5 2.5 5-5 2.5z"/></symbol>
+    <symbol id="i-bow" viewBox="0 0 24 24"><path d="M7 4c9 3 9 13 0 16M7 4v16M3 12h13M16 12l-3-2.5M16 12l-3 2.5"/></symbol>
+    <symbol id="i-rider" viewBox="0 0 24 24"><path d="M6 4v9a6 6 0 0 0 12 0V4M6 8h3M15 8h3M6 12h3M15 12h3"/></symbol>
+    <symbol id="i-siege" viewBox="0 0 24 24"><path d="M3 20h18M7 20l4-12M11 8l7-4M18 4l1.5 4.5M15 20l-4-12M5 20l3-6"/></symbol>
+    <symbol id="i-brute" viewBox="0 0 24 24"><path d="M7 4h10l3 5-2 11H6L4 9zM9 10h2M13 10h2M9 15h6"/></symbol>
+    <symbol id="i-camp" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19M3.5 3.5h3M3.5 3.5v3M20.5 3.5h-3M20.5 3.5v3"/></symbol>
+    <symbol id="i-node" viewBox="0 0 24 24"><path d="M12 3l7 6-7 12L5 9zM5 9h14M9 9l3 12M15 9l-3 12"/></symbol>
+    <symbol id="i-citadel" viewBox="0 0 24 24"><path d="M7 21V6h2V3h2v3h2V3h2v3h2v15zM12 21v-5M10 11h4"/></symbol>
+    <symbol id="i-base" viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11zM10 21v-6h4v6"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></symbol>
+    <symbol id="i-reports" viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"/></symbol>
+    <symbol id="i-army" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></symbol>
+    <symbol id="i-go" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><h1>Ironveld</h1><span class="tag" id="rank"></span></div>
+    <div class="res" id="res"></div>
+    <div class="coach" id="coach" hidden></div>
+  </header>
+
+  <main id="main" data-tab="hold">
+    <div class="col a">
+      <section class="panel plate" id="p-hold" aria-labelledby="h-hold">
+        <h2 id="h-hold">Stronghold</h2>
+        <div id="hold"></div>
+      </section>
+      <section class="panel plate" id="p-army" aria-labelledby="h-army">
+        <h2 id="h-army">Army</h2>
+        <div id="army"></div>
+      </section>
+    </div>
+    <div class="col b">
+      <section class="panel plate" id="p-map" aria-labelledby="h-map">
+        <h2 id="h-map">The Veld</h2>
+        <div id="map"></div>
+        <div id="marches"></div>
+      </section>
+      <section class="panel plate" id="p-reports" aria-labelledby="h-reports">
+        <h2 id="h-reports">Battle reports</h2>
+        <div id="reports"></div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button class="tab" data-act="tab" data-tab="hold"><svg class="ic"><use href="#i-base"/></svg><span>Stronghold</span></button>
+    <button class="tab" data-act="tab" data-tab="army"><svg class="ic"><use href="#i-army"/></svg><span>Army</span></button>
+    <button class="tab" data-act="tab" data-tab="map"><svg class="ic"><use href="#i-map"/></svg><span>Map</span></button>
+    <button class="tab" data-act="tab" data-tab="reports"><svg class="ic"><use href="#i-reports"/></svg><span>Reports</span><i class="dot" id="repdot" hidden></i></button>
+  </nav>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="src/sim.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
