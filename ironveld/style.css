@@ -7,13 +7,15 @@
   --head: Rockwell, "Roboto Slab", "Rockwell Nova", "Hoefler Text", "Iowan Old Style", Georgia, serif;
   --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --r: 6px;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; min-height: 100vh; min-height: 100dvh; color: var(--ink);
   font: 15px/1.45 var(--body); -webkit-font-smoothing: antialiased;
   background: radial-gradient(1100px 560px at 85% -8%, rgba(242,164,58,.09), transparent 62%), linear-gradient(180deg, #16212c, #0f171f 75%);
+  background-color: var(--bg);
   background-attachment: fixed;
 }
 button { font: inherit; color: inherit; }
@@ -22,7 +24,7 @@ h1, h2, h3, p { margin: 0; }
 :focus-visible { outline: 2px solid var(--amber2); outline-offset: 2px; }
 
 /* ---------- header ---------- */
-.top { position: sticky; top: 0; z-index: 20; padding: 8px 12px 10px; padding-top: calc(8px + env(safe-area-inset-top)); background: rgba(20,29,39,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--edge); }
+.top { position: sticky; top: 0; z-index: 20; padding: 8px 12px 10px; padding-top: calc(8px + env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(20,29,39,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--edge); }
 .brand { display: flex; align-items: baseline; gap: 10px; max-width: 1240px; margin: 0 auto; }
 .brand h1 { font: 700 1.4rem var(--head); color: var(--amber2); letter-spacing: .01em; }
 .brand .tag { color: var(--muted); font-size: .82rem; }
@@ -43,7 +45,7 @@ h1, h2, h3, p { margin: 0; }
 .coach button { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 4px; min-height: 32px; }
 
 /* ---------- layout ---------- */
-main { max-width: 1240px; margin: 0 auto; padding: 12px 12px 92px; }
+main { max-width: 1240px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 92px max(16px, env(safe-area-inset-left, 0px)); }
 .col { display: contents; }
 .panel { display: none; }
 main[data-tab="hold"] #p-hold, main[data-tab="army"] #p-army, main[data-tab="map"] #p-map, main[data-tab="reports"] #p-reports { display: block; }

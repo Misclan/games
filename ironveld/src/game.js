@@ -502,12 +502,13 @@
       case 'speed': S.prefs.speed = +el.dataset.v; $('sheet').querySelectorAll('[data-act="speed"]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.v === S.prefs.speed)); }); return;
       case 'skip': skipBattle(); return;
       case 'reset':
-        if (window.confirm('Start over with a new map? Your current stronghold will be lost.')) {
-          try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
-          if (ui.battle && ui.battle.timer) clearTimeout(ui.battle.timer);
-          ui.battle = null; ui.dispatch = null; ui.modal = null; $('modal').hidden = true;
-          S = G.newGame(Date.now()); save(); markAll(); flush(); updateHeader(); updateCoach(); setTab('hold');
-        }
+        $('sheet').innerHTML = '<h2>Start over?</h2><p class="lead">You get a new map. Your current stronghold, troops and heroes are lost.</p><div class="actions"><button class="btn" data-act="close">Keep playing</button><button class="btn primary" data-act="reset-yes">Start over</button></div>';
+        showModal('confirm'); return;
+      case 'reset-yes':
+        try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+        if (ui.battle && ui.battle.timer) clearTimeout(ui.battle.timer);
+        ui.battle = null; ui.dispatch = null; ui.modal = null; $('modal').hidden = true; $('sheet').innerHTML = '';
+        pending = []; S = G.newGame(Date.now()); save(); markAll(); flush(); updateHeader(); updateCoach(); setTab('hold');
         return;
     }
   });
