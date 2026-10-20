@@ -34,6 +34,54 @@ test('same seed gives the same map and battle result', () => {
   assert.deepStrictEqual(r1, r2);
 });
 
+test('old saves migrate to the frontier and raid rules without losing the current map', () => {
+  const s = G.newGame(T0, 41), oldTiles = JSON.stringify(s.tiles);
+  s.v = 1; delete s.region; delete s.raid;
+  const back = G.deserialize(JSON.stringify(s));
+  assert.strictEqual(back.v, G.VERSION);
+  assert.strictEqual(back.region, 1);
+  assert.strictEqual(back.raid.phase, 'quiet');
+  assert.strictEqual(JSON.stringify(back.tiles), oldTiles);
+});
+
+test('citadel victory opens a harder seeded region and preserves the stronghold', () => {
+  const s = G.newGame(T0, 41), oldSeed = s.seed, oldTiles = JSON.stringify(s.tiles);
+  s.won = true;
+  s.marches.push({ phase: 'back', x: 1, y: 1 });
+  assert.ok(!G.advanceRegion(s, T0 + sec(90)).ok, 'waits for the old map march to return');
+  s.marches = [];
+  assert.ok(G.advanceRegion(s, T0 + sec(90)).ok);
+  assert.strictEqual(s.region, 2);
+  assert.notStrictEqual(s.seed, oldSeed);
+  assert.notStrictEqual(JSON.stringify(s.tiles), oldTiles);
+  assert.strictEqual(G.tileAt(s, 8, 0).level, 12);
+  assert.strictEqual(s.units.pike, 4);
+  assert.strictEqual(s.b.farm, 1);
+  assert.strictEqual(s.won, false);
+});
+
+test('neighbor camps warn before a deterministic raid and the garrison defends', () => {
+  const s = G.newGame(T0, 41);
+  s.units = { pike: 100, bow: 100, rider: 100, siege: 100 };
+  s.b.wall = 8;
+  const warn = G.advance(s, T0 + G.RAID_INTERVAL_MS);
+  assert.ok(warn.some(e => e.kind === 'raid-warning'));
+  assert.strictEqual(s.raid.phase, 'incoming');
+  const arrival = G.advance(s, T0 + G.RAID_INTERVAL_MS + G.RAID_WARNING_MS);
+  assert.ok(arrival.some(e => e.kind === 'battle'));
+  assert.strictEqual(s.raid.phase, 'quiet');
+  assert.strictEqual(s.reports[0].kind, 'raid');
+  assert.ok(s.reports[0].win);
+});
+
+test('raids do not resolve while the player is away', () => {
+  const s = G.newGame(T0, 41), now = T0 + sec(3600);
+  const ev = G.advance(s, now, { away: true });
+  assert.ok(!ev.some(e => e.kind === 'battle'));
+  assert.strictEqual(s.raid.phase, 'quiet');
+  assert.ok(s.raid.nextAt > now);
+});
+
 test('resources grow at the building rates and stop at storage cap', () => {
   const s = G.newGame(T0, 1);
   const before = s.res.food, rate = G.rates(s).food;
@@ -128,7 +176,7 @@ test('offline progress: 24 hours away finishes everything and caps resources', (
   s.res.stone = 600;
   G.startUpgrade(s, 'quarry', T0);
   G.trainUnits(s, 'pike', 10, T0);
-  const ev = G.advance(s, T0 + 24 * 3600 * 1000);
+  const ev = G.advance(s, T0 + 24 * 3600 * 1000, { away: true });
   assert.strictEqual(G.levelOf(s, 'quarry'), 2);
   assert.strictEqual(s.units.pike, 14);
   assert.ok(ev.length >= 2);

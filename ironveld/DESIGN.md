@@ -40,7 +40,9 @@ A single-player, browser-first war strategy game in the genre of Total Battle: W
 
 Before marching, the scouts replay the exact fight 7 times with fixed seeds and report a verdict from "Easy win" to "Hopeless". This is the real simulator, not an estimate.
 
-**The Veld.** A 9 by 9 map with your keep in the centre. Camps get harder with distance, resource nodes pay out and then rest, and the Ironlord Citadel sits in the far corner as the final boss. Cleared camps respawn after 2.5 minutes.
+**The frontiers.** Each region is a seeded 9 by 9 map with your keep in the centre. Camps get harder with distance, resource nodes pay out and then rest, and the Ironlord Citadel sits in the far corner as the final boss. Citadel victory opens another map while preserving your stronghold, resources, heroes and troops. Later frontiers raise camp and Citadel levels. Cleared camps respawn after 2.5 minutes.
+
+**Raids.** Every five minutes, an active camp adjacent to the keep may gather a raiding party. The map and a toast warn the player two minutes before it arrives. The troops currently at home defend automatically, with the Bulwark wall and Brannoc contributing as usual. A successful defense rests that camp; a defeat costs 8% of stored resources. Raids are deferred while the game is away, so offline time does not consume the garrison or stores.
 
 **Offline.** Up to 8 hours of production is credited, queued upgrades and training finish, and a "Welcome back" summary lists what happened.
 
@@ -53,9 +55,9 @@ Before marching, the scouts replay the exact fight 7 times with fixed seeds and 
 | `src/sim.js` | All rules. Pure and deterministic, takes time as an argument, runs in the browser and in Node. |
 | `src/game.js` | Draws state to the DOM and forwards clicks to the rules. |
 | `style.css` | Blued steel, molten amber, verdigris. One decorative device: riveted plates. |
-| `test/smoke.js` | 19 headless checks. Run `node test/smoke.js`. |
+| `test/smoke.js` | 23 headless checks. Run `node test/smoke.js`. |
 
-Saves live in `localStorage` under `ironveld.save.v1`. The whole game state is plain JSON, so save, load and replay are trivial.
+Saves live in `localStorage` under `ironveld.save.v1`. Version 1 saves migrate to the current rules while preserving the existing map and progress. The whole game state is plain JSON, so save, load and replay are trivial.
 
 ## Tuning facts (checked by the tests)
 

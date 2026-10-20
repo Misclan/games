@@ -199,7 +199,16 @@
   }
   function renderMap() {
     var now = Date.now(), hint = hintTile();
-    var h = '<div class="grid" role="group" aria-label="World map">';
+    var regionName = G.REGIONS[(S.region - 1) % G.REGIONS.length];
+    if (S.region > G.REGIONS.length) regionName += ' ' + (1 + Math.floor((S.region - 1) / G.REGIONS.length));
+    var h = '<div class="frontier"><div><b>Frontier ' + S.region + ': ' + esc(regionName) + '</b><small>Take the level ' + G.tileAt(S, G.CITADEL.x, G.CITADEL.y).level + ' Ironlord Citadel to open the next map.</small></div>';
+    if (S.won) h += '<button class="btn small primary" data-act="next-region">Open next frontier</button>';
+    h += '</div>';
+    if (S.raid && S.raid.phase === 'incoming') {
+      var source = G.tileAt(S, S.raid.x, S.raid.y);
+      h += '<div class="raid-warning" role="status"><b>Raid approaching</b><span>' + esc(G.COMPS[source.comp].name) + ' is marching on your keep.</span><small>Arrival in <i data-cd="' + S.raid.arriveAt + '"></i></small></div>';
+    }
+    h += '<div class="grid" data-region="' + (((S.region - 1) % G.REGIONS.length) + 1) + '" role="group" aria-label="World map">';
     S.tiles.forEach(function (t) {
       var st = G.tileState(S, t, now);
       var cls = 'tile t' + t.terrain + (st === 'cooldown' ? ' cool' : '') + (st === 'targeted' ? ' out' : '') + (hint === t ? ' hint' : '');
@@ -437,7 +446,7 @@
       } else if (e.kind === 'victory') {
         showVictory();
       } else {
-        toast(e.text, { kind: e.kind === 'return' ? 'good' : '' });
+        toast(e.text, { kind: e.kind === 'return' ? 'good' : e.kind === 'raid-warning' ? 'warn' : '' });
       }
     });
     if (structural) markAll();
@@ -445,7 +454,7 @@
   }
   function showVictory() {
     var mins = Math.max(1, Math.round((Date.now() - S.started) / 60000));
-    $('sheet').innerHTML = '<h2>The Ironlord Citadel has fallen</h2><p class="lead">You took it in about ' + plural(mins, 'minute', 'minutes') + ' of play time, winning ' + S.stats.wins + ' battles and losing ' + S.stats.lost + ' troops along the way.</p><p style="margin-top:10px">The veld is yours, warden. Keep hunting camps, finish upgrading your stronghold, or start over with a new map.</p><div class="actions"><button class="btn" data-act="reset">Start over</button><button class="btn primary" data-act="close">Keep playing</button></div>';
+    $('sheet').innerHTML = '<h2>The Ironlord Citadel has fallen</h2><p class="lead">You took it in about ' + plural(mins, 'minute', 'minutes') + ' of play time, winning ' + S.stats.wins + ' battles and losing ' + S.stats.lost + ' troops along the way.</p><p style="margin-top:10px">The frontier is secure. Carry your stronghold and army into a new region, or stay here and keep hunting.</p><div class="actions"><button class="btn" data-act="reset">Start over</button><button class="btn" data-act="close">Keep this region</button><button class="btn primary" data-act="next-region">Open next frontier</button></div>';
     showModal('victory');
   }
   function showAway(before, evs, ms) {
@@ -493,6 +502,10 @@
         r = G.sendMarch(S, ui.dispatch, now);
         if (!r.ok) { toast(r.reason, { kind: 'bad' }); return; }
         closeModal(); afterAction(); toast('Your troops march out.', { kind: 'good' }); return;
+      case 'next-region':
+        r = G.advanceRegion(S, now);
+        if (!r.ok) { toast(r.reason, { kind: 'bad' }); return; }
+        closeModal(); afterAction(); setTab('map'); toast('Frontier ' + S.region + ' is open.', { kind: 'good' }); return;
       case 'close': closeModal(); return;
       case 'replay': {
         var rep = S.reports.filter(function (q) { return q.id === +el.dataset.id; })[0];
@@ -521,7 +534,7 @@
     var gap = now - ui.lastTick;
     var before = null;
     if (gap > 45000 && ui.lastTick) before = JSON.parse(JSON.stringify(S.res));
-    var evs = pending.concat(G.advance(S, now));
+    var evs = pending.concat(G.advance(S, now, { away: gap > 45000 && !!ui.lastTick }));
     pending = [];
     if (ui.modal === 'battle') { pending = evs; evs = []; }   // no spoilers while a fight is playing
     if (before) { handleEvents(evs, now, true); flush(); showAway(before, evs, gap); }
@@ -539,7 +552,7 @@
     if (!S) S = G.newGame(now);
     buildHeader();
     var before = JSON.parse(JSON.stringify(S.res)), gap = now - S.t;
-    var evs = G.advance(S, now);
+    var evs = G.advance(S, now, { away: gap > 45000 });
     ui.lastTick = now;
     markAll(); flush(); updateHeader(); updateCoach(); setTab('hold');
     if (returning && gap > 45000) showAway(before, evs, gap);
