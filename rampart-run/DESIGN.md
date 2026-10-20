@@ -1,6 +1,6 @@
-# Rampart Run: design notes (v0.4, plan only)
+# Rampart Run: design notes (v0.4, built)
 
-Our own take on the crowd-shooter / gate-runner mini-game that Total Battle: Strategy Games shows in its App Store screenshots. Working title: **Rampart Run**. Nothing is built yet. This is the plan to agree on first. v0.4 folds in Ken's answers: zombie swarms, melee boss, acid spitters, random perk barrels, big deployables, separate recruit and multiplier cards, and two themes.
+Our own take on the crowd-shooter / gate-runner mini-game that Total Battle: Strategy Games shows in its App Store screenshots. Working title: **Rampart Run**. Built as described here; see README.md for the layout. Boss health is scaled up in code (x5) so the boss is a real fight. v0.4 folds in Ken's answers: zombie swarms, melee boss, acid spitters, random perk barrels, big deployables, separate recruit and multiplier cards, and two themes.
 
 ## What the reference shows
 

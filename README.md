@@ -6,7 +6,7 @@ A home for my game ideas. Each game lives in its own sub-folder and is self-cont
 |------|--------|-----------|
 | Gatecrash | [`gatecrash/`](gatecrash/) | Block-breaker where the blocks sit inside a fortress and you must thread the ball through narrow gates |
 | Ironveld | [`ironveld/`](ironveld/) | Fantasy war-strategy / base-builder in the Total Battle genre, no pay-to-win (playable, single-player) |
-| Rampart Run | [`rampart-run/`](rampart-run/) | Gate-runner shooter: steer a growing warband through maths cards, break perk barrels, beat enemy crowds (design plan) |
+| Rampart Run | [`rampart-run/`](rampart-run/) | Crowd-shooter / gate-runner: multiply your squad, shoot perk barrels, cut down zombie hordes and beat the boss on a bridge or a dock (playable) |
 
 ## Conventions
 - One folder per game, with its own `README.md` and a `DESIGN.md` for ideas and mechanics.
