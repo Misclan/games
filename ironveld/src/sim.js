@@ -10,7 +10,7 @@
   'use strict';
 
   /* ---------- constants ---------- */
-  const VERSION = 1;
+  const VERSION = 2;
   const MAP_SIZE = 9;
   const BASE = { x: 4, y: 4 };
   const CITADEL = { x: 8, y: 0 };
@@ -24,6 +24,9 @@
   const DMG_SCALE = 0.22;
   const RES = ['food', 'stone', 'iron'];
   const REPORT_LIMIT = 15;
+  const RAID_INTERVAL_MS = 5 * 60 * 1000;
+  const RAID_WARNING_MS = 2 * 60 * 1000;
+  const REGIONS = ['The Veld', 'The Ashen March', 'The Cinder Reach', 'The Frostline'];
 
   /* ---------- small helpers ---------- */
   function mulberry32(a) {
@@ -254,7 +257,8 @@
   }
 
   /* ---------- game state ---------- */
-  function genTiles(seed) {
+  function genTiles(seed, region) {
+    region = Math.max(1, region || 1);
     const rng = mulberry32(mix(seed, 0x1234));
     const tiles = [];
     for (let y = 0; y < MAP_SIZE; y++) for (let x = 0; x < MAP_SIZE; x++)
@@ -272,7 +276,7 @@
       const r = rng();
       if (r < 0.22) {
         t.kind = 'camp';
-        t.level = Math.min(9, 2 * d - 1 + (rng() < 0.5 ? 0 : 1));
+        t.level = Math.min(9 + region - 1, 2 * d - 1 + (rng() < 0.5 ? 0 : 1) + region - 1);
         const pool = d === 2 ? ['goblins', 'wolves', 'bandits', 'golems'] : ['wolves', 'bandits', 'golems', 'warband'];
         t.comp = pool[Math.floor(rng() * pool.length)];
       } else if (r < 0.34) {
@@ -280,7 +284,7 @@
       }
     }
     const c = tiles[tidx(CITADEL.x, CITADEL.y)];
-    c.kind = 'citadel'; c.level = 10; c.comp = 'citadel'; c.res = null;
+    c.kind = 'citadel'; c.level = 10 + 2 * (region - 1); c.comp = 'citadel'; c.res = null;
     return tiles;
   }
 
@@ -292,7 +296,8 @@
       b: {}, queue: [], training: [],
       units: { pike: 4, bow: 0, rider: 0, siege: 0 },
       heroes: { brannoc: { level: 1, xp: 0 } },
-      tiles: genTiles(seed), marches: [], reports: [], nextId: 1,
+      region: 1, tiles: genTiles(seed, 1), marches: [], reports: [], nextId: 1,
+      raid: { phase: 'quiet', nextAt: now + RAID_INTERVAL_MS },
       tut: 0, won: false,
       stats: { wins: 0, losses: 0, lost: 0, killed: 0 },
       prefs: { speed: 1 }
@@ -305,7 +310,14 @@
   function deserialize(str) {
     let s;
     try { s = JSON.parse(str); } catch (e) { return null; }
-    if (!s || s.v !== VERSION || !s.res || !s.b || !s.tiles || s.tiles.length !== MAP_SIZE * MAP_SIZE) return null;
+    if (!s || (s.v !== 1 && s.v !== VERSION) || !s.res || !s.b || !s.tiles || s.tiles.length !== MAP_SIZE * MAP_SIZE) return null;
+    if (s.v === 1) {
+      s.region = 1;
+      s.raid = { phase: 'quiet', nextAt: (s.t || Date.now()) + RAID_INTERVAL_MS };
+      s.v = VERSION;
+    }
+    if (!s.region) s.region = 1;
+    if (!s.raid) s.raid = { phase: 'quiet', nextAt: (s.t || Date.now()) + RAID_INTERVAL_MS };
     return s;
   }
 
@@ -435,7 +447,77 @@
     s.queue.forEach(q => consider(q.finish, 'upgrade', q));
     s.training.forEach(q => consider(q.finish, 'train', q));
     s.marches.forEach(m => consider(m.phase === 'out' ? m.arrive : m.ret, m.phase === 'out' ? 'arrive' : 'return', m));
+    if (s.raid) {
+      if (s.raid.phase === 'quiet') consider(s.raid.nextAt, 'raid-start', s.raid);
+      else if (s.raid.phase === 'incoming') consider(s.raid.arriveAt, 'raid-arrive', s.raid);
+    }
     return best;
+  }
+
+  function startRaid(s, at, out) {
+    const neighbors = s.tiles.filter(t => t.kind === 'camp' && dist(t.x, t.y) === 1 && t.readyAt <= at);
+    if (!neighbors.length) {
+      s.raid = { phase: 'quiet', nextAt: at + RAID_INTERVAL_MS };
+      return;
+    }
+    neighbors.sort((a, b) => a.level - b.level || tidx(a.x, a.y) - tidx(b.x, b.y));
+    const pick = neighbors[mix(s.seed, Math.floor(at / RAID_INTERVAL_MS)) % neighbors.length];
+    s.raid = { phase: 'incoming', x: pick.x, y: pick.y, warnedAt: at, arriveAt: at + RAID_WARNING_MS,
+      seed: mix(s.seed, Math.floor(at / RAID_INTERVAL_MS) + s.region * 97) };
+    out.push({ t: at, kind: 'raid-warning', x: pick.x, y: pick.y,
+      text: GarrisonWarning(pick) });
+  }
+
+  function GarrisonWarning(tile) {
+    return COMPS[tile.comp].name + ' is gathering a raiding party. It will reach your keep in two minutes.';
+  }
+
+  function resolveRaid(s, at, out) {
+    const raid = s.raid, tile = tileAt(s, raid.x, raid.y);
+    if (!tile || tile.kind !== 'camp' || tile.readyAt > at) {
+      out.push({ t: at, kind: 'raid-foiled', text: 'The raiders turned back before reaching your keep.' });
+      s.raid = { phase: 'quiet', nextAt: at + RAID_INTERVAL_MS - RAID_WARNING_MS };
+      return;
+    }
+    const spec = buildSpec(s, { units: s.units, hero: s.heroes.brannoc && !heroBusy(s, 'brannoc') ? 'brannoc' : null }, tile);
+    spec.enemy.squads.forEach(q => { q.count = Math.max(1, Math.ceil(q.count * 0.45)); });
+    const res = runBattle(spec, raid.seed);
+    const lost = {}, survivors = {};
+    let lostN = 0, killed = 0;
+    for (const k of UNIT_ORDER) {
+      const remaining = res.survivors[k] || 0, sent = s.units[k] || 0;
+      if (sent > remaining) { lost[k] = sent - remaining; lostN += sent - remaining; }
+      survivors[k] = remaining;
+      s.units[k] = remaining;
+    }
+    res.squads.forEach((q, i) => { if (q.side === 'e') killed += q.count0 - res.frames[res.frames.length - 1].c[i]; });
+    const win = res.winner === 'player';
+    const rid = s.nextId++;
+    const report = { id: rid, time: at, x: raid.x, y: raid.y, kind: 'raid', name: 'Raid from ' + COMPS[tile.comp].name,
+      level: tile.level, win: win, result: res.winner, rounds: res.rounds, frames: res.frames, log: res.log,
+      squads: res.squads, loot: null, lost: lost, heroXp: 0, hero: null, timing: 'open', seen: false };
+    s.reports.unshift(report);
+    if (s.reports.length > REPORT_LIMIT) s.reports.length = REPORT_LIMIT;
+    s.stats.killed += killed; s.stats.lost += lostN;
+    if (win) { s.stats.wins++; tile.readyAt = at + RESPAWN_MS; }
+    else {
+      s.stats.losses++;
+      for (const r of RES) s.res[r] = Math.floor(s.res[r] * 0.92);
+    }
+    out.push({ t: at, kind: 'battle', report: rid, win: win,
+      text: win ? 'Your garrison repelled the raid.' : 'The raiders broke through and plundered your stores.' });
+    s.raid = { phase: 'quiet', nextAt: at + RAID_INTERVAL_MS - RAID_WARNING_MS };
+  }
+
+  function advanceRegion(s, now) {
+    if (!s.won) return { ok: false, reason: 'Defeat the Ironlord Citadel before opening a new frontier.' };
+    if (s.marches.length) return { ok: false, reason: 'Wait for all marches to return before opening a new frontier.' };
+    s.region++;
+    s.seed = mix(s.seed, s.region * 0x45d9f3b);
+    s.tiles = genTiles(s.seed, s.region);
+    s.won = false;
+    s.raid = { phase: 'quiet', nextAt: now + RAID_INTERVAL_MS };
+    return { ok: true };
   }
 
   function levelUpHero(s, id) {
@@ -490,9 +572,12 @@
     else s.marches = s.marches.filter(x => x !== m);
   }
 
-  function advance(s, now) {
+  function advance(s, now, options) {
+    options = options || {};
     const out = [];
     if (now < s.t) { s.t = now; return out; }
+    // Raids are a live-play feature: never resolve a warning or attack while the player is away.
+    if (options.away && s.raid) s.raid = { phase: 'quiet', nextAt: now + RAID_INTERVAL_MS };
     const floor = Math.max(s.t, now - OFFLINE_CAP_MS);
     let cursor = s.t;
     function integrate(to) {
@@ -517,6 +602,10 @@
         out.push({ t: ev.time, kind: 'train', text: ev.ref.count + ' ' + (ev.ref.count === 1 ? UNITS[ev.ref.unit].name : UNITS[ev.ref.unit].plural).toLowerCase() + ' finished training.' });
       } else if (ev.kind === 'arrive') {
         resolveArrival(s, ev.ref, out);
+      } else if (ev.kind === 'raid-start' && !options.away) {
+        startRaid(s, ev.time, out);
+      } else if (ev.kind === 'raid-arrive' && !options.away) {
+        resolveRaid(s, ev.time, out);
       } else if (ev.kind === 'return') {
         const m = ev.ref;
         for (const k of UNIT_ORDER) s.units[k] = (s.units[k] || 0) + (m.units[k] || 0);
@@ -544,9 +633,9 @@
   }
 
   return {
-    VERSION, MAP_SIZE, BASE, CITADEL, MAX_LEVEL, BUILDER_SLOTS, OFFLINE_CAP_MS, TRAVEL_MS_PER_TILE, RESPAWN_MS, NODE_COOLDOWN_MS, MAX_ROUNDS, DMG_SCALE, RES,
+    VERSION, MAP_SIZE, BASE, CITADEL, MAX_LEVEL, BUILDER_SLOTS, OFFLINE_CAP_MS, TRAVEL_MS_PER_TILE, RESPAWN_MS, NODE_COOLDOWN_MS, RAID_INTERVAL_MS, RAID_WARNING_MS, REGIONS, MAX_ROUNDS, DMG_SCALE, RES,
     BUILDINGS, BUILDING_ORDER, UNITS, UNIT_ORDER, TYPE_INFO, HEROES, HERO_ORDER, TIMINGS, COMPS, NODE_NAMES, ADV, RANGED,
-    newGame, serialize, deserialize, advance, startUpgrade, trainUnits, recruitHero, sendMarch, checkMarch, forecast, buildSpec, runBattle, campArmy,
+    newGame, serialize, deserialize, advance, advanceRegion, startUpgrade, trainUnits, recruitHero, sendMarch, checkMarch, forecast, buildSpec, runBattle, campArmy,
     upgradeCost, upgradeTime, levelOf, sumLevels, storageCap, rates, rateFor, marchCapacity, trainFactor, wallBonus, heroCap, xpNeed, heroBonus, describeLevel,
     canAfford, unitTotal, heroBusy, tileAt, tileState, dist, campLoot, nodeLoot, updateTutorial, clone, adv
   };
